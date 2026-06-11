@@ -191,4 +191,67 @@ rmSync(join(here, 'xdg'), { recursive: true, force: true });
   part(m3, { type: 'text', text: '90s → 14s on the same album. Draft mode skips the full JPEG decode and the pool uses all 8 cores.' });
 }
 
-console.log(`demo transcripts written to ${root}, ${join(here, 'codex')}, ${join(here, 'xdg')}`);
+// ---- gemini fixture (HOME=demo/home) ----
+const ghome = join(here, 'home');
+rmSync(ghome, { recursive: true, force: true });
+{
+  const chats = join(ghome, '.gemini', 'tmp', 'demohash0000', 'chats');
+  mkdirSync(chats, { recursive: true });
+  const t0 = NOW - 2 * 24 * 60 * MIN;
+  const at = (m) => new Date(t0 + m * MIN).toISOString();
+  const tok = (input, output) => ({ input, output, cached: Math.round(input * 0.7), thoughts: 0, tool: 0, total: input + output });
+  const session = {
+    sessionId: 'ge3a7c1d-6666-4abc-9def-0123456789ab',
+    projectHash: 'demohash0000',
+    startTime: at(0),
+    lastUpdated: at(11),
+    messages: [
+      { id: 'g1', timestamp: at(0), type: 'user', content: 'The RSS feed broke after the markdown migration. Validator says invalid XML.' },
+      { id: 'g2', timestamp: at(1), type: 'gemini', model: 'gemini-2.5-pro', tokens: tok(5200, 900), content: 'Invalid XML in a feed usually means unescaped entities from post content. Checking the feed template.', toolCalls: [
+        { id: 't1', name: 'read_file', args: { absolute_path: '/Users/ada/blog/src/feed.ts' } },
+        { id: 't2', name: 'run_shell_command', args: { command: 'curl -s localhost:3000/rss.xml | xmllint --noout -', directory: '/Users/ada/blog' } },
+      ] },
+      { id: 'g3', timestamp: at(6), type: 'gemini', model: 'gemini-2.5-pro', tokens: tok(6100, 1400), content: 'Found it — post excerpts are interpolated raw, and the migration introduced & in titles. Wrapping all text nodes in CDATA.', toolCalls: [
+        { id: 't3', name: 'replace', args: { file_path: '/Users/ada/blog/src/feed.ts' } },
+        { id: 't4', name: 'run_shell_command', args: { command: 'curl -s localhost:3000/rss.xml | xmllint --noout - && echo VALID', directory: '/Users/ada/blog' } },
+      ] },
+      { id: 'g4', timestamp: at(11), type: 'gemini', model: 'gemini-2.5-pro', tokens: tok(6900, 600), content: 'Feed validates clean. CDATA wrapping handles every entity case the old escaping missed.' },
+    ],
+  };
+  writeFileSync(join(chats, 'session-demo-ge3a7c1d.json'), JSON.stringify(session));
+}
+
+// ---- aider fixture (HOME=demo/home) ----
+{
+  const proj = join(ghome, 'blog-engine');
+  mkdirSync(proj, { recursive: true });
+  const d = new Date(NOW - 5 * 24 * 60 * MIN);
+  const pad = (n) => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  writeFileSync(join(proj, '.aider.chat.history.md'), `
+# aider chat started at ${stamp}
+
+> Aider v0.86.1
+> Model: ollama/qwen3-coder:480b-cloud with diff edit format
+> Git repo: .git with 42 files
+
+#### add reading-time estimates to post headers
+
+I'll add a reading-time helper and wire it into the post header component.
+
+> Applied edit to src/lib/reading-time.ts
+> Applied edit to src/components/PostHeader.tsx
+> Commit a1b2c3d feat: reading-time estimates on post headers
+> Tokens: 9.6k sent, 1.8k received.
+
+#### nice, also show it on the index cards
+
+Done — the index card now reuses the same helper.
+
+> Applied edit to src/components/PostCard.tsx
+> Commit d4e5f6a feat: reading time on index cards
+> Tokens: 11k sent, 950 received.
+`);
+}
+
+console.log(`demo transcripts written to ${root}, ${join(here, 'codex')}, ${join(here, 'xdg')}, ${ghome}`);

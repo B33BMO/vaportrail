@@ -35,7 +35,7 @@ export async function runList(opts: ListOpts): Promise<void> {
       String(s.prompts),
       String(s.toolCallsTotal),
       humanTokens(s.tokens.output),
-      s.models.map(shortModel).join(',') || '?',
+      truncate(s.models.map(shortModel).join(','), 19) || '?',
     ]);
   }
   const lines = table(rows, [cyan, dim, yellow, magenta, null, dim, dim, dim, dim], [5, 6, 7]);

@@ -2,7 +2,7 @@
 
 > Your agents leave trails. **vaportrail** reads them.
 
-A local-first flight recorder for AI coding agent sessions. Every **Claude Code**, **Codex CLI**, and **opencode** session leaves a detailed transcript on disk — what you asked, what the agent did, every file it touched, every command it ran, every token it burned. vaportrail reads all three formats and turns that pile of JSON into one searchable, replayable history.
+A local-first flight recorder for AI coding agent sessions. Every **Claude Code**, **Codex CLI**, **opencode**, **Gemini CLI**, and **Aider** session leaves a detailed transcript on disk — what you asked, what the agent did, every file it touched, every command it ran, every token it burned. vaportrail reads all five formats and turns that pile of transcripts into one searchable, replayable history.
 
 **Zero runtime dependencies. Nothing leaves your machine. One command to try it:**
 
@@ -76,13 +76,16 @@ vaportrail reads each agent's native on-disk format — no hooks, no wrappers, n
 | Claude Code | `~/.claude/projects/**/*.jsonl` (honors `CLAUDE_CONFIG_DIR`) |
 | Codex CLI | `~/.codex/sessions/**/rollout-*.jsonl` (honors `CODEX_HOME`) |
 | opencode | `~/.local/share/opencode/storage/` (honors `XDG_DATA_HOME`) |
+| Gemini CLI | `~/.gemini/tmp/<hash>/chats/*.json` — project hashes are reversed by hashing likely paths, with tool-call args as fallback |
+| Aider | `.aider.chat.history.md` in `~` and project dirs up to two levels below it (markdown, parsed per embedded session) |
 
 Everything is normalized into one session model: token usage is deduplicated where formats repeat it across entries, subagent work is separated from your own prompts, tool names are normalized across agents (`shell_command` and `bash` both count as `Bash`), and bookkeeping noise is filtered out. ~100 MB of history parses in about a second. Read-only: vaportrail never modifies a transcript.
 
 ## Roadmap
 
 - [x] Codex CLI and opencode transcript formats
-- [ ] More agents: Gemini CLI, Aider, Cursor CLI
+- [x] Gemini CLI and Aider
+- [ ] Cursor CLI (sessions live in SQLite; needs `node:sqlite`)
 - [ ] `vaportrail export <id>` — session → markdown / shareable gist
 - [ ] Cost estimates per session/model
 - [ ] Local web UI (`vaportrail ui`) with cross-session analytics

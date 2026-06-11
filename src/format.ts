@@ -69,7 +69,10 @@ export function fmtDateTime(iso: string | undefined): string {
 }
 
 export function shortModel(model: string): string {
-  return model.replace(/^claude-/, '').replace(/-\d{8}$/, '');
+  return model
+    .replace(/^[^/]+\//, '') // provider prefixes like "ollama/"
+    .replace(/^claude-/, '')
+    .replace(/-\d{8}$/, '');
 }
 
 export function truncate(s: string, max: number): string {

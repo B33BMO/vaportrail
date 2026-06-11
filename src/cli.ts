@@ -5,7 +5,7 @@ import { runSearch } from './commands/search.js';
 import { runStats } from './commands/stats.js';
 import { bold, cyan, dim } from './format.js';
 
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
 
 const NEEDS_VALUE = new Set(['dir', 'project', 'limit', 'source']);
 const SHORT: Record<string, string> = {
@@ -75,7 +75,7 @@ ${bold('usage')}
   vaportrail stats                    aggregate activity, tools, models, files
 
 ${bold('options')}
-  -s, --source <s>    agents to read: claude, codex, opencode (comma list; default all)
+  -s, --source <s>    agents: claude, codex, opencode, gemini, aider (comma list; default all)
   -p, --project <s>   only sessions whose project path contains <s> ('.' = cwd)
   -n, --limit <n>     max rows/matches (list: 25, search: 50)
   -a, --all           no limit

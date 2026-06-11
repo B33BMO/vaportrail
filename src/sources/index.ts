@@ -4,6 +4,8 @@ import { Session, SourceName } from '../types.js';
 import { claudeSource } from './claude.js';
 import { codexSource } from './codex.js';
 import { opencodeSource } from './opencode.js';
+import { geminiSource } from './gemini.js';
+import { aiderSource } from './aider.js';
 
 export interface SourceDef {
   name: SourceName;
@@ -11,11 +13,11 @@ export interface SourceDef {
   root(override?: string): string;
   /** Find session entry files under the root. */
   discover(root: string): TranscriptFile[];
-  /** Parse one session entry file into the normalized model. */
-  parse(path: string, opts: ParseOptions): Promise<Session | null>;
+  /** Parse one session entry file; some formats hold many sessions per file. */
+  parse(path: string, opts: ParseOptions): Promise<Session | Session[] | null>;
 }
 
-export const SOURCES: SourceDef[] = [claudeSource, codexSource, opencodeSource];
+export const SOURCES: SourceDef[] = [claudeSource, codexSource, opencodeSource, geminiSource, aiderSource];
 
 export function resolveSources(filter?: string): SourceDef[] {
   if (!filter) return SOURCES;

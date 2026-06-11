@@ -36,8 +36,10 @@ export async function runShow(opts: ShowOpts): Promise<void> {
     return;
   }
 
-  const source = sourceByName(matches[0]!.source);
-  const s = await source.parse(matches[0]!.file, { withEvents: true });
+  const match = matches[0]!;
+  const source = sourceByName(match.source);
+  const parsed = await source.parse(match.file, { withEvents: true });
+  const s = Array.isArray(parsed) ? parsed.find((x) => x.id === match.id) ?? null : parsed;
   if (!s) {
     console.error('Could not parse that session.');
     process.exitCode = 1;
@@ -68,7 +70,7 @@ function printHeader(s: Session): void {
   console.log(
     `${bold('vaportrail')} ${dim('·')} session ${cyan(s.id.slice(0, 8))}${dim(s.id.slice(8))} ${dim(`· ${s.source}`)}`,
   );
-  console.log(`${dim('title   ')} ${bold(sessionTitle(s))}`);
+  console.log(`${dim('title   ')} ${bold(truncate(sessionTitle(s), Math.max(40, (process.stdout.columns ?? 120) - 10)))}`);
   console.log(
     `${dim('project ')} ${magenta(shortenHome(s.project || '?'))}${s.gitBranch ? dim(` (${s.gitBranch})`) : ''}`,
   );

@@ -30,12 +30,14 @@ export async function loadSessions(opts: CommonOpts, withEvents = false): Promis
   for (const source of sources) {
     const root = source.root(dirOverride);
     for (const f of source.discover(root)) {
-      const s = await source.parse(f.file, { withEvents });
-      if (!s) continue;
-      if (s.isAgent && !opts.agents) continue;
-      if (s.prompts === 0 && s.turns === 0) continue;
-      if (opts.project && !matchProject(s, opts.project)) continue;
-      sessions.push(s);
+      const parsed = await source.parse(f.file, { withEvents });
+      const list = Array.isArray(parsed) ? parsed : parsed ? [parsed] : [];
+      for (const s of list) {
+        if (s.isAgent && !opts.agents) continue;
+        if (s.prompts === 0 && s.turns === 0) continue;
+        if (opts.project && !matchProject(s, opts.project)) continue;
+        sessions.push(s);
+      }
     }
   }
   return sessions;

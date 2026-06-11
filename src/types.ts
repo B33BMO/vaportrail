@@ -21,7 +21,7 @@ export interface SessionEvent {
   sidechain: boolean;
 }
 
-export type SourceName = 'claude' | 'codex' | 'opencode';
+export type SourceName = 'claude' | 'codex' | 'opencode' | 'gemini' | 'aider';
 
 export interface Session {
   id: string;
