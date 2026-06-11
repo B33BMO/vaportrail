@@ -10,7 +10,7 @@ Set Theme "Catppuccin Mocha"
 Set TypingSpeed 35ms
 
 Hide
-Type `export CLAUDE_CONFIG_DIR="demo/claude" PATH="$PATH:$(dirname $(which node 2>/dev/null || echo /usr/local/bin))"`
+Type `export CLAUDE_CONFIG_DIR="demo/claude" CODEX_HOME="demo/codex" XDG_DATA_HOME="demo/xdg" PATH="$PATH:$(dirname $(which node 2>/dev/null || echo /usr/local/bin))"`
 Enter
 Type "clear"
 Enter

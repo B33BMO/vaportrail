@@ -1,7 +1,5 @@
-import { findTranscripts } from '../discover.js';
-import { parseSession } from '../parse.js';
 import { Session } from '../types.js';
-import { CommonOpts, projectLabel, sessionTitle } from './common.js';
+import { CommonOpts, loadSessions, sessionTitle, sourceByName } from './common.js';
 import {
   bold,
   cyan,
@@ -17,7 +15,6 @@ import {
   truncate,
   yellow,
 } from '../format.js';
-import { basename } from 'node:path';
 
 export interface ShowOpts extends CommonOpts {
   idPrefix: string;
@@ -25,8 +22,8 @@ export interface ShowOpts extends CommonOpts {
 }
 
 export async function runShow(opts: ShowOpts): Promise<void> {
-  const files = findTranscripts(opts.root);
-  const matches = files.filter((f) => basename(f.file, '.jsonl').startsWith(opts.idPrefix));
+  const sessions = await loadSessions({ ...opts, project: undefined, agents: true });
+  const matches = sessions.filter((s) => s.id.startsWith(opts.idPrefix));
   if (matches.length === 0) {
     console.error(`No session found matching '${opts.idPrefix}'.`);
     process.exitCode = 1;
@@ -34,14 +31,15 @@ export async function runShow(opts: ShowOpts): Promise<void> {
   }
   if (matches.length > 1) {
     console.error(`Ambiguous id '${opts.idPrefix}' matches ${matches.length} sessions:`);
-    for (const m of matches.slice(0, 10)) console.error(`  ${basename(m.file, '.jsonl')}`);
+    for (const m of matches.slice(0, 10)) console.error(`  ${m.id} (${m.source})`);
     process.exitCode = 1;
     return;
   }
 
-  const s = await parseSession(matches[0]!.file, { withEvents: true });
+  const source = sourceByName(matches[0]!.source);
+  const s = await source.parse(matches[0]!.file, { withEvents: true });
   if (!s) {
-    console.error('Could not parse that session file.');
+    console.error('Could not parse that session.');
     process.exitCode = 1;
     return;
   }
@@ -67,7 +65,9 @@ export async function runShow(opts: ShowOpts): Promise<void> {
 function printHeader(s: Session): void {
   const duration =
     s.startedAt && s.endedAt ? fmtDuration(Date.parse(s.endedAt) - Date.parse(s.startedAt)) : '?';
-  console.log(`${bold('vaportrail')} ${dim('·')} session ${cyan(s.id.slice(0, 8))}${dim(s.id.slice(8))}`);
+  console.log(
+    `${bold('vaportrail')} ${dim('·')} session ${cyan(s.id.slice(0, 8))}${dim(s.id.slice(8))} ${dim(`· ${s.source}`)}`,
+  );
   console.log(`${dim('title   ')} ${bold(sessionTitle(s))}`);
   console.log(
     `${dim('project ')} ${magenta(shortenHome(s.project || '?'))}${s.gitBranch ? dim(` (${s.gitBranch})`) : ''}`,

@@ -1,6 +1,6 @@
 import { stripEvents } from '../parse.js';
 import { CommonOpts, loadSessions, projectLabel, sessionTitle } from './common.js';
-import { cyan, dim, humanTokens, magenta, relTime, shortModel, table, truncate } from '../format.js';
+import { cyan, dim, humanTokens, magenta, relTime, shortModel, table, truncate, yellow } from '../format.js';
 
 export interface ListOpts extends CommonOpts {
   limit: number;
@@ -23,12 +23,13 @@ export async function runList(opts: ListOpts): Promise<void> {
   }
 
   const cols = process.stdout.columns ?? 120;
-  const titleWidth = Math.max(24, Math.min(60, cols - 70));
-  const rows: string[][] = [['ID', 'WHEN', 'PROJECT', 'TITLE', '❯', '⚒', 'OUT', 'MODEL']];
+  const titleWidth = Math.max(24, Math.min(60, cols - 80));
+  const rows: string[][] = [['ID', 'WHEN', 'SRC', 'PROJECT', 'TITLE', '❯', '⚒', 'OUT', 'MODEL']];
   for (const s of shown) {
     rows.push([
       s.id.slice(0, 8),
       relTime(s.endedAt),
+      s.source,
       truncate(projectLabel(s), 20),
       truncate(sessionTitle(s), titleWidth),
       String(s.prompts),
@@ -37,7 +38,7 @@ export async function runList(opts: ListOpts): Promise<void> {
       s.models.map(shortModel).join(',') || '?',
     ]);
   }
-  const lines = table(rows, [cyan, dim, magenta, null, dim, dim, dim, dim], [4, 5, 6]);
+  const lines = table(rows, [cyan, dim, yellow, magenta, null, dim, dim, dim, dim], [5, 6, 7]);
   console.log(dim(lines[0] ?? ''));
   for (const line of lines.slice(1)) console.log(line);
   console.log();

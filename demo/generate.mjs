@@ -131,4 +131,64 @@ session({
   ],
 });
 
-console.log(`demo transcripts written to ${root}`);
+// ---- codex fixture (CODEX_HOME=demo/codex) ----
+const codexRoot = join(here, 'codex', 'sessions', '2026', '06', '09');
+rmSync(join(here, 'codex'), { recursive: true, force: true });
+mkdirSync(codexRoot, { recursive: true });
+{
+  const id = '019d1234-5555-7abc-8def-0123456789ab';
+  let t = NOW - 30 * 60 * MIN;
+  const ts = () => new Date(t).toISOString();
+  const lines = [
+    { timestamp: ts(), type: 'session_meta', payload: { id, timestamp: ts(), cwd: `${HOME}/relay`, cli_version: '0.72.0', source: 'cli', git: { branch: 'main' } } },
+    { timestamp: ts(), type: 'turn_context', payload: { cwd: `${HOME}/relay`, model: 'gpt-5.1-codex-max' } },
+  ];
+  const user = (text) => lines.push({ timestamp: ts(), type: 'response_item', payload: { type: 'message', role: 'user', content: [{ type: 'input_text', text }] } });
+  const agent = (text) => lines.push({ timestamp: ts(), type: 'response_item', payload: { type: 'message', role: 'assistant', content: [{ type: 'output_text', text }] } });
+  const shell = (command) => lines.push({ timestamp: ts(), type: 'response_item', payload: { type: 'function_call', name: 'shell_command', arguments: JSON.stringify({ command, workdir: `${HOME}/relay` }) } });
+  const patch = (files) => lines.push({ timestamp: ts(), type: 'response_item', payload: { type: 'custom_tool_call', name: 'apply_patch', input: files.map((f) => `*** Update File: ${f}`).join('\n') } });
+  const tokens = (totals) => lines.push({ timestamp: ts(), type: 'event_msg', payload: { type: 'token_count', info: { total_token_usage: totals, last_token_usage: totals } } });
+
+  user('Containerize the relay — multi-stage build, distroless runtime, under 20MB.');
+  t += MIN;
+  shell('ls && cat go.mod');
+  t += MIN;
+  agent('Go 1.23, no cgo — perfect for a static build in a distroless image. Writing the Dockerfile.');
+  patch(['Dockerfile', '.dockerignore']);
+  t += 2 * MIN;
+  shell('docker build -t relay:dev . && docker images relay:dev --format "{{.Size}}"');
+  t += 3 * MIN;
+  agent('14.2MB final image. Build stage compiles with CGO_ENABLED=0, runtime is distroless/static. Done.');
+  tokens({ input_tokens: 48_200, cached_input_tokens: 39_800, output_tokens: 6_150, total_tokens: 54_350 });
+  writeFileSync(join(codexRoot, `rollout-2026-06-09T10-00-00-${id}.jsonl`), lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
+}
+
+// ---- opencode fixture (XDG_DATA_HOME=demo/xdg) ----
+const oc = join(here, 'xdg', 'opencode', 'storage');
+rmSync(join(here, 'xdg'), { recursive: true, force: true });
+{
+  const sid = 'ses_demo0001thumbnailpipeline';
+  const created = NOW - 4 * 24 * 60 * MIN;
+  const dirOf = (p) => mkdirSync(dirname(p), { recursive: true });
+  const writeJson = (p, obj) => { dirOf(p); writeFileSync(p, JSON.stringify(obj)); };
+  writeJson(join(oc, 'session', 'demoproject0000000000', `${sid}.json`), {
+    id: sid, version: '1.0.220', projectID: 'demoproject0000000000', directory: `${HOME}/gallery`,
+    title: 'Speed up the thumbnail pipeline 6x', time: { created, updated: created + 22 * MIN },
+  });
+  let n = 0;
+  const msg = (obj) => { const id = `msg_demo${String(++n).padStart(4, '0')}`; writeJson(join(oc, 'message', sid, `${id}.json`), { id, sessionID: sid, ...obj }); return id; };
+  const part = (mid, obj) => writeJson(join(oc, 'part', mid, `prt_demo${String(++n).padStart(4, '0')}.json`), { id: `prt_${n}`, messageID: mid, sessionID: sid, ...obj });
+  const m1 = msg({ role: 'user', time: { created } });
+  part(m1, { type: 'text', text: 'Thumbnail generation takes 90s for a 200-image album. Make it fast.' });
+  const m2 = msg({ role: 'assistant', time: { created: created + MIN, completed: created + 8 * MIN }, modelID: 'qwen3-coder:480b-cloud', providerID: 'ollama-cloud', tokens: { input: 8400, output: 2100, reasoning: 0, cache: { read: 31000, write: 2400 } } });
+  part(m2, { type: 'text', text: 'Profiling first — my bet is sequential processing and full-size decodes.' });
+  part(m2, { type: 'tool', tool: 'bash', callID: 'c1', state: { status: 'completed', input: { command: 'python -m cProfile -s cumtime thumbs.py album/ | head -20' }, time: { start: created + 2 * MIN } } });
+  part(m2, { type: 'tool', tool: 'read', callID: 'c2', state: { status: 'completed', input: { filePath: `${HOME}/gallery/thumbs.py` }, time: { start: created + 3 * MIN } } });
+  const m3 = msg({ role: 'assistant', time: { created: created + 9 * MIN, completed: created + 20 * MIN }, modelID: 'qwen3-coder:480b-cloud', providerID: 'ollama-cloud', tokens: { input: 9100, output: 3800, reasoning: 0, cache: { read: 38000, write: 1800 } } });
+  part(m3, { type: 'text', text: 'Confirmed: PIL decodes every image at full resolution, one at a time. Switching to draft-mode decode + a process pool.' });
+  part(m3, { type: 'tool', tool: 'edit', callID: 'c3', state: { status: 'completed', input: { filePath: `${HOME}/gallery/thumbs.py` }, time: { start: created + 10 * MIN } } });
+  part(m3, { type: 'tool', tool: 'bash', callID: 'c4', state: { status: 'completed', input: { command: 'time python thumbs.py album/' }, time: { start: created + 12 * MIN } } });
+  part(m3, { type: 'text', text: '90s → 14s on the same album. Draft mode skips the full JPEG decode and the pool uses all 8 cores.' });
+}
+
+console.log(`demo transcripts written to ${root}, ${join(here, 'codex')}, ${join(here, 'xdg')}`);

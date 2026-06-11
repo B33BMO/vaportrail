@@ -1,20 +1,20 @@
 #!/usr/bin/env node
-import { transcriptRoot } from './discover.js';
 import { runList } from './commands/list.js';
 import { runShow } from './commands/show.js';
 import { runSearch } from './commands/search.js';
 import { runStats } from './commands/stats.js';
 import { bold, cyan, dim } from './format.js';
 
-const VERSION = '0.1.1';
+const VERSION = '0.2.0';
 
-const NEEDS_VALUE = new Set(['dir', 'project', 'limit']);
+const NEEDS_VALUE = new Set(['dir', 'project', 'limit', 'source']);
 const SHORT: Record<string, string> = {
   n: 'limit',
   p: 'project',
   a: 'all',
   j: 'json',
   d: 'dir',
+  s: 'source',
   h: 'help',
   v: 'version',
 };
@@ -75,12 +75,13 @@ ${bold('usage')}
   vaportrail stats                    aggregate activity, tools, models, files
 
 ${bold('options')}
+  -s, --source <s>    agents to read: claude, codex, opencode (comma list; default all)
   -p, --project <s>   only sessions whose project path contains <s> ('.' = cwd)
   -n, --limit <n>     max rows/matches (list: 25, search: 50)
   -a, --all           no limit
   -j, --json          machine-readable output
-  -d, --dir <path>    transcript root (default ~/.claude/projects)
-      --agents        include subagent transcript files
+  -d, --dir <path>    transcript root override (with -s for non-claude layouts)
+      --agents        include subagent sessions
       --full          show: full untruncated text
       --regex         search: treat query as a regular expression
       --tools         search: also match tool inputs (commands, file paths)
@@ -122,10 +123,11 @@ async function main(): Promise<void> {
   }
 
   const common = {
-    root: transcriptRoot(strFlag(flags, 'dir')),
+    dir: strFlag(flags, 'dir'),
     json: flags.json === true,
     project: strFlag(flags, 'project'),
     agents: flags.agents === true,
+    source: strFlag(flags, 'source'),
   };
 
   if (cmd === 'list') {

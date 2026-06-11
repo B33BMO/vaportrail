@@ -2,7 +2,7 @@
 
 > Your agents leave trails. **vaportrail** reads them.
 
-A local-first flight recorder for AI coding agent sessions. Every Claude Code session you run leaves a detailed transcript on disk — what you asked, what the agent did, every file it touched, every command it ran, every token it burned. vaportrail turns that pile of JSONL into something you can actually use.
+A local-first flight recorder for AI coding agent sessions. Every **Claude Code**, **Codex CLI**, and **opencode** session leaves a detailed transcript on disk — what you asked, what the agent did, every file it touched, every command it ran, every token it burned. vaportrail reads all three formats and turns that pile of JSON into one searchable, replayable history.
 
 **Zero runtime dependencies. Nothing leaves your machine. One command to try it:**
 
@@ -59,20 +59,30 @@ The big picture: sessions, prompts, turns, token totals (with cache split), a 30
 
 | flag | meaning |
 |------|---------|
+| `-s, --source <s>` | agents to read: `claude`, `codex`, `opencode` (comma list; default all) |
 | `-p, --project <s>` | only sessions whose project path contains `<s>` (`.` = current dir) |
 | `-n, --limit <n>` | max rows / matches |
 | `-a, --all` | no limit |
 | `-j, --json` | machine-readable output for every command |
-| `-d, --dir <path>` | transcript root (default `~/.claude/projects`, honors `CLAUDE_CONFIG_DIR`) |
+| `-d, --dir <path>` | transcript root override (combine with `-s` for non-claude layouts) |
 | `--agents` | include subagent transcripts |
 
 ## How it works
 
-Claude Code writes one JSONL file per session under `~/.claude/projects/`. vaportrail stream-parses them (all known schema versions), deduplicates token usage that repeats across entries sharing a request, separates subagent sidechains from your own prompts, and filters out bookkeeping noise. ~100 MB of history parses in under half a second. Read-only: vaportrail never modifies a transcript.
+vaportrail reads each agent's native on-disk format — no hooks, no wrappers, no telemetry:
+
+| agent | where it reads from |
+|-------|--------------------|
+| Claude Code | `~/.claude/projects/**/*.jsonl` (honors `CLAUDE_CONFIG_DIR`) |
+| Codex CLI | `~/.codex/sessions/**/rollout-*.jsonl` (honors `CODEX_HOME`) |
+| opencode | `~/.local/share/opencode/storage/` (honors `XDG_DATA_HOME`) |
+
+Everything is normalized into one session model: token usage is deduplicated where formats repeat it across entries, subagent work is separated from your own prompts, tool names are normalized across agents (`shell_command` and `bash` both count as `Bash`), and bookkeeping noise is filtered out. ~100 MB of history parses in about a second. Read-only: vaportrail never modifies a transcript.
 
 ## Roadmap
 
-- [ ] More agents: Codex CLI, opencode, Gemini CLI, Aider transcript formats
+- [x] Codex CLI and opencode transcript formats
+- [ ] More agents: Gemini CLI, Aider, Cursor CLI
 - [ ] `vaportrail export <id>` — session → markdown / shareable gist
 - [ ] Cost estimates per session/model
 - [ ] Local web UI (`vaportrail ui`) with cross-session analytics

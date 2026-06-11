@@ -22,6 +22,7 @@ export async function runStats(opts: CommonOpts): Promise<void> {
   }
 
   const projects = new Set<string>();
+  const bySource: Record<string, number> = {};
   const toolCounts: Record<string, number> = {};
   const filesWritten: Record<string, number> = {};
   const tokensByModel: Record<string, TokenTotals & { turns: number }> = {};
@@ -31,6 +32,7 @@ export async function runStats(opts: CommonOpts): Promise<void> {
   let last: string | undefined;
 
   for (const s of sessions) {
+    bySource[s.source] = (bySource[s.source] ?? 0) + 1;
     if (s.project) projects.add(s.project);
     totals.prompts += s.prompts;
     totals.turns += s.turns;
@@ -57,7 +59,7 @@ export async function runStats(opts: CommonOpts): Promise<void> {
   if (opts.json) {
     console.log(
       JSON.stringify(
-        { sessions: sessions.length, projects: projects.size, first, last, totals, toolCounts, tokensByModel, turnsByDay },
+        { sessions: sessions.length, bySource, projects: projects.size, first, last, totals, toolCounts, tokensByModel, turnsByDay },
         null,
         2,
       ),
@@ -72,6 +74,12 @@ export async function runStats(opts: CommonOpts): Promise<void> {
     `${dim('sessions')} ${bold(String(sessions.length))} across ${projects.size} projects ${dim(
       `(${(first ?? '?').slice(0, 10)} → ${(last ?? '?').slice(0, 10)})`,
     )}`,
+  );
+  console.log(
+    `${dim('sources ')} ${Object.entries(bySource)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name, n]) => `${name} ${bold(String(n))}`)
+      .join(' · ')}`,
   );
   console.log(
     `${dim('activity')} ${humanCount(totals.prompts)} prompts · ${humanCount(totals.turns)} turns · ${humanCount(

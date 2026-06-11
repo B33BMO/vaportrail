@@ -91,6 +91,7 @@ export async function parseSession(file: string, opts: ParseOptions = {}): Promi
   const id = basename(file, '.jsonl');
   const s: Session = {
     id,
+    source: 'claude',
     file,
     project: '',
     prompts: 0,
