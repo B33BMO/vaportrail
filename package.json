@@ -1,0 +1,38 @@
+{
+  "name": "vaportrail",
+  "version": "0.1.0",
+  "description": "Your agents leave trails. vaportrail reads them — a local-first flight recorder for AI coding agent sessions.",
+  "type": "module",
+  "bin": {
+    "vaportrail": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "claude-code",
+    "ai-agents",
+    "observability",
+    "transcripts",
+    "session-replay",
+    "cli",
+    "flight-recorder",
+    "agent-logs"
+  ],
+  "author": "Brandon Bischoff",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0"
+  }
+}
