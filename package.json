@@ -19,6 +19,14 @@
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/B33BMO/vaportrail.git"
+  },
+  "homepage": "https://github.com/B33BMO/vaportrail#readme",
+  "bugs": {
+    "url": "https://github.com/B33BMO/vaportrail/issues"
+  },
   "keywords": [
     "claude-code",
     "ai-agents",
