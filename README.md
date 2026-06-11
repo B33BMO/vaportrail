@@ -10,14 +10,7 @@ A local-first flight recorder for AI coding agent sessions. Every Claude Code se
 npx vaportrail
 ```
 
-```
-ID        WHEN        PROJECT     TITLE                                            ❯    ⚒   OUT  MODEL
-cca29f96  2h ago      wssh        Build SSH over WebSocket with agent enrollment  16  168  252k  opus-4-8
-9063ce5a  3d ago      portfolio   Build dynamic themeable portfolio site          12  425  381k  opus-4-8
-0bf9cc08  2026-05-29  zulip-tui   Build a Zulip TUI client                        14  348  255k  opus-4-7
-...
-27 sessions · vaportrail show <id> to replay one
-```
+![vaportrail demo](https://raw.githubusercontent.com/B33BMO/vaportrail/master/demo/demo.gif)
 
 ## Why
 
