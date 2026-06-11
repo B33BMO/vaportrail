@@ -6,7 +6,7 @@ import { runSearch } from './commands/search.js';
 import { runStats } from './commands/stats.js';
 import { bold, cyan, dim } from './format.js';
 
-const VERSION = '0.1.0';
+const VERSION = '0.1.1';
 
 const NEEDS_VALUE = new Set(['dir', 'project', 'limit']);
 const SHORT: Record<string, string> = {
